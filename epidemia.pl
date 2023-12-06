@@ -1,8 +1,11 @@
 :- dynamic person/4. % person(ID, STATE, COORDX, COORDY)
-%poner el dynamic de cuatro para las coordenadas
 
-% para crear las coordenadas, hacerlo aleatoriamente de 0 al tamaño de la matriz(50 o 100, ya veré)
-% añadir tambień las coordenadas de la gente a la hora de imprimir en pantalla las personas
+% The size of the matrix
+matrix_x(150).
+matrix_y(150).
+
+% The distante the people move every time 
+movement_distance(5).
 
 % Delete people
 delete_people :-
@@ -28,16 +31,18 @@ write_people :-
   get_people_list(PEOPLE),  % To get a list of all the people(ID, STATE, COORDX, COORDY)
   show_people_list(PEOPLE). % To show that list
 
-% To create random coordenates
-random_coordenates(X, Y) :-
-  random_between(0, 150, X),
-  random_between(0, 150, Y).
+% To create random coordenates (X and Y the number created, MAX_X and MAX_Y the highest random number)
+random_coordenates(X, Y, MAX_X, MAX_Y) :-
+  random_between(0, MAX_X, X),
+  random_between(0, MAX_Y, Y).
 
 % To add the number of people the user inserted. It is a loop, starting the COUNTER by 0
 adding_persons(COUNTER, COUNTER).
 adding_persons(N_PEOPLE, COUNTER) :- 
   COUNTER < N_PEOPLE,
-  random_coordenates(X, Y),             % To create random coordenates
+  matrix_x(MAX_X),
+  matrix_y(MAX_Y),
+  random_coordenates(X, Y, MAX_X, MAX_Y),             % To create random coordenates
   add_person(COUNTER, healthy, X, Y),   % Add one person healthy    
   N_COUNTER is COUNTER + 1,
   adding_persons(N_PEOPLE, N_COUNTER).  % Recursive call
@@ -46,6 +51,69 @@ adding_persons(N_PEOPLE, COUNTER) :-
 add_person(ID, STATE, COORDX, COORDY) :-
   assert(person(ID, STATE, COORDX, COORDY)).
 
+% To modify a person created by its id
+modify_person(ID, STATE, COORDX, COORDY) :-
+  retract(person(ID, _, _, _)),
+  assert(person(ID, STATE, COORDX, COORDY)).
+
+% COMPROBAR QUE ESTÁ DENTRO DE LA MATRIZ, SI SE QUEDA POR FUERA, YA SEA POSITIVO O NEGATIVO, 'INTENTAR INVERTIR SU MOVIMIENTO'
+
+% To get which 'overflow' (less than 0, or more than the matrix size)  0 is correct, 1 is < 0 and 2 is > MAX
+is_overflow(COORD, MAX_COORD, FLOW) :-
+  ((COORD < 0, FLOW is 1);
+  (COORD > MAX_COORD, FLOW is 2);
+  (FLOW is 0)).
+
+% Fix the coordenate corresponding to the flow
+fix_coordenate(COORD, FLOW, FIX_COORD) :-
+  movement_distance(DIST),
+  ((FLOW = 0, FIX_COORD is COORD);
+  (FLOW = 1, FIX_COORD is COORD + DIST + DIST);
+  (FLOW = 2, FIX_COORD is COORD - DIST - DIST)).
+
+% Check if the coordenates are correct and fixes if it is not the case
+check_coordenates(AUX_X, AUX_Y, NEW_AUX_X, NEW_AUX_Y) :-
+  matrix_x(MAX_X),
+  matrix_y(MAX_Y),
+  is_overflow(AUX_X, MAX_X, FLOW1),
+  is_overflow(AUX_Y, MAX_Y, FLOW2),
+  fix_coordenate(AUX_X, FLOW1, NEW_AUX_X),
+  fix_coordenate(AUX_Y, FLOW2, NEW_AUX_Y).
+  
+% To get the new coordenates
+new_coordenates(NEW_X, NEW_Y, X, Y, COORDX, COORDY) :-
+  random(OP1),                  % Random number 0 or 1
+  OPERATION1 is floor(OP1 * 2), % To get the int        
+  random(OP2),
+  OPERATION2 is floor(OP2 * 2),
+  ((OPERATION1 = 0, OPERATION2 = 0, AUX_X is X + COORDX, AUX_Y is Y + COORDY);
+  (OPERATION1 = 1, OPERATION2 = 1, AUX_X is COORDX - X, AUX_Y is COORDY - Y);
+  (OPERATION1 = 0, OPERATION2 = 1, AUX_X is X + COORDX, AUX_Y is COORDY - Y);
+  (OPERATION1 = 1, OPERATION2 = 0, AUX_X is COORDX - X, AUX_Y is Y + COORDY)),
+  check_coordenates(AUX_X, AUX_Y, NEW_X, NEW_Y).
+  
+
+% To move a person individually
+move_person([]).
+move_person([(ID, STATE, COORDX, COORDY)|Z]) :-
+  write_people,
+  movement_distance(MAX_X),
+  movement_distance(MAX_Y),
+  random_coordenates(X, Y, MAX_X, MAX_Y),
+  new_coordenates(NEW_X, NEW_Y, X, Y, COORDX, COORDY),
+  modify_person(ID, STATE, NEW_X, NEW_Y),   % Modify the coordenates of its person by the id
+  move_person(Z).
+
+% To move randomly all the people in the matrix  (HACER EL MOVIMIENTO TANTO POSITIVO COMO NEGATIVO)
+move_people :-
+  get_people_list(PEOPLE),
+  move_person(PEOPLE).
+
+% To start all the movement of the people, the spread of the epidemia...
+%epidemia_simulation :-
+
+
+
 % To start simulation
 start :-
   write("Welcome to an epidemiology simulation. Please insert how many people do you want in your simulation"), nl,
@@ -53,6 +121,7 @@ start :-
   adding_persons(N_PEOPLE, 0),
   get_number_people(PEOPLE),
   write("Okey, you just added : "), write(PEOPLE), nl,
+  move_people,
   write("The people : "), nl,
   write_people,
   delete_people,
