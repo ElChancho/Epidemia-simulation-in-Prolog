@@ -1,43 +1,50 @@
-:- dynamic person/2. % poner el dynamic de cuatro para las coordenadas
+:- dynamic person/4. % person(ID, STATE, COORDX, COORDY)
+%poner el dynamic de cuatro para las coordenadas
 
 % para crear las coordenadas, hacerlo aleatoriamente de 0 al tamaño de la matriz(50 o 100, ya veré)
 % añadir tambień las coordenadas de la gente a la hora de imprimir en pantalla las personas
 
 % Delete people
 delete_people :-
-  retractall(person(_, _)).
+  retractall(person(_, _, _, _)).
 
-% To get the list of id of the people
+% To get the list of all the people
 get_people_list(N_PEOPLE) :-
-  findall((ID, STATE), person(ID, STATE), N_PEOPLE).
+  findall((ID, STATE, COORDX, COORDY), person(ID, STATE, COORDX, COORDY), N_PEOPLE).
 
-% To get the number of people
+% To get the number of people (length of the list)
 get_number_people(PEOPLE) :-
   get_people_list(N_PEOPLE),
   length(N_PEOPLE, PEOPLE).
 
 % To show the list of the people
 show_people_list([]).
-show_people_list([(ID, STATE)|Y]) :-
-  write("Person : "), write(ID), write(" State: "), write(STATE), nl,
+show_people_list([(ID, STATE, COORDX, COORDY)|Y]) :-
+  write("Person : "), write(ID), write(" State: "), write(STATE), write(" Coord ("), write(COORDX), write(", "), write(COORDY), write(")"), nl,
   show_people_list(Y).
 
 % To write the people on screen
 write_people :-
-  get_people_list(PEOPLE),
-  show_people_list(PEOPLE).
+  get_people_list(PEOPLE),  % To get a list of all the people(ID, STATE, COORDX, COORDY)
+  show_people_list(PEOPLE). % To show that list
 
-% To add the number of people the user inserted
+% To create random coordenates
+random_coordenates(X, Y) :-
+  random_between(0, 150, X),
+  random_between(0, 150, Y).
+
+% To add the number of people the user inserted. It is a loop, starting the COUNTER by 0
 adding_persons(COUNTER, COUNTER).
-adding_persons(N_PEOPLE, COUNTER) :-
+adding_persons(N_PEOPLE, COUNTER) :- 
   COUNTER < N_PEOPLE,
-  add_person(COUNTER, healthy),
+  random_coordenates(X, Y),             % To create random coordenates
+  add_person(COUNTER, healthy, X, Y),   % Add one person healthy    
   N_COUNTER is COUNTER + 1,
-  adding_persons(N_PEOPLE, N_COUNTER).
+  adding_persons(N_PEOPLE, N_COUNTER).  % Recursive call
   
 % To add people dynamically
-add_person(ID, STATE) :-
-  assert(person(ID, STATE)).
+add_person(ID, STATE, COORDX, COORDY) :-
+  assert(person(ID, STATE, COORDX, COORDY)).
 
 % To start simulation
 start :-
