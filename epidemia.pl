@@ -7,6 +7,9 @@ matrix_y(150).
 % The distante the people move every time 
 movement_distance(15).
 
+% The distance where the people gets ill
+infection_distance(5).
+
 % Delete people
 delete_people :-
   retractall(person(_, _, _, _)).
@@ -107,6 +110,44 @@ move_people :-
   get_people_list(PEOPLE),
   move_person(PEOPLE).
 
+% To calculate the distance between two coordenates
+euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, RESULT) :-
+  DELTAX is COORDX2 - COORDX,
+  DELTAY is COORDY2 - COORDY,
+  RESULT is sqrt(DELTAX * DELTAX + DELTAY * DELTAY).
+
+% To know it the person will get ill or not
+%random_infection(EUCL_DISTANCE, )
+
+
+% To check the distance between the people
+check_distance2((_,_,_,_),[]).
+check_distance2((ID, STATE, COORDX, COORDY),[(ID2, STATE2, COORDX2, COORDY2)|Z]) :-
+  ((STATE = infected);                                                    % if the first person is infected, just finalise
+  (ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
+  %(STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
+  (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, RESULT),
+    write("Distance : "), write(RESULT), nl
+  )
+
+  ).
+  %check_distance2()
+
+
+% To check the distance between the people
+check_distance([]).
+check_distance([X|Z]) :-
+  get_people_list(PEOPLE),
+  check_distance2(X, PEOPLE),
+  check_distance(Z).
+
+% To spread the disease among the people
+infect_people :-
+  debug,
+  get_people_list(PEOPLE),
+  check_distance(PEOPLE).
+
+
 % To start all the movement of the people, the spread of the epidemia...
 %epidemia_simulation :-
 
@@ -121,17 +162,9 @@ start :-
   write("Okey, you just added : "), write(PEOPLE), nl,
   write_people,
   move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   write("The people : "), nl,
   write_people,
+  infect_people,
   delete_people,
   write("SIMULATION FINISHED").
 
