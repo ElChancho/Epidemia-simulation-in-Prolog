@@ -5,7 +5,7 @@ matrix_x(150).
 matrix_y(150).
 
 % The distante the people move every time 
-movement_distance(5).
+movement_distance(15).
 
 % Delete people
 delete_people :-
@@ -56,7 +56,6 @@ modify_person(ID, STATE, COORDX, COORDY) :-
   retract(person(ID, _, _, _)),
   assert(person(ID, STATE, COORDX, COORDY)).
 
-% COMPROBAR QUE ESTÁ DENTRO DE LA MATRIZ, SI SE QUEDA POR FUERA, YA SEA POSITIVO O NEGATIVO, 'INTENTAR INVERTIR SU MOVIMIENTO'
 
 % To get which 'overflow' (less than 0, or more than the matrix size)  0 is correct, 1 is < 0 and 2 is > MAX
 is_overflow(COORD, MAX_COORD, FLOW) :-
@@ -96,7 +95,6 @@ new_coordenates(NEW_X, NEW_Y, X, Y, COORDX, COORDY) :-
 % To move a person individually
 move_person([]).
 move_person([(ID, STATE, COORDX, COORDY)|Z]) :-
-  write_people,
   movement_distance(MAX_X),
   movement_distance(MAX_Y),
   random_coordenates(X, Y, MAX_X, MAX_Y),
@@ -121,7 +119,17 @@ start :-
   adding_persons(N_PEOPLE, 0),
   get_number_people(PEOPLE),
   write("Okey, you just added : "), write(PEOPLE), nl,
-  move_people,
+  write_people,
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   write("The people : "), nl,
   write_people,
   delete_people,
