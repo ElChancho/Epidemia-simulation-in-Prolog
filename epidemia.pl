@@ -1,5 +1,7 @@
 :- dynamic person/4. % person(ID, STATE, COORDX, COORDY)
 
+% STATE (healty/infected/cured)
+
 % The size of the matrix
 matrix_x(150).
 matrix_y(150).
@@ -9,6 +11,9 @@ movement_distance(15).
 
 % The distance where the people gets possibly ill
 infection_distance(5).
+
+% The probability to get infected (min = 0.1 and max = 1)
+infection_probability(0.5).
 
 % Delete people
 delete_people :-
@@ -117,19 +122,35 @@ euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, RESULT) :-
   RESULT is sqrt(DELTAX * DELTAX + DELTAY * DELTAY).
 
 % To know it the person will get ill or not
-%random_infection(EUCL_DISTANCE, )
+% If the infection probability is 0.5, we multiply by 10 and then we do the difference by 10
+% Then generate a random number between that value, and if the value is equal to the result we had, it will get infected(1)
+% Instead, will not get infected(0)
+% Example : 0.5 * 10 = 5  |  10 - 5 = 5 | random_between(0,5, RES) | RES = 5, infected | RES != 5, no infected
+random_infection(EUCL_DISTANCE, INFECT) :-
+  infection_distance(INFECT_DISTANCE),
+  infection_probability(INFECT_PROB),
+  ((EUCL_DISTANCE > INFECT_DISTANCE, INFECT = 0);
+  (EUCL_DISTANCE <= INFECT_DISTANCE, INFECT_PROB = 1, INFECT = 1);
+  (EUCL_DISTANCE <= INFECT_DISTANCE,
+  AUX1 is INFECT_PROB * 10,
+  AUX2 is AUX1 - 10,
+  random_between(1, AUX2, RES),
+  ((AUX2 = RES, INFECT = 1);(INFECT = 0))  
+  )
+  )
 
 
 % To check the distance between the people
 check_distance2((_,_,_,_),[]).
 check_distance2((ID, STATE, COORDX, COORDY),[(ID2, STATE2, COORDX2, COORDY2)|Z]) :-
-  %% TAMBIÉN ACORDARSE DE PONER SI YA ESTÁ CURADO
-  ((STATE = infected);                                                    % if the first person is infected, just finalise
+  ((STATE = cured);
+  (STATE = infected);                                                    % if the first person is infected, just finalise
   (ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
-  %(STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
-  (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, RESULT),
-    write("Distance : "), write(RESULT), nl,
-    check_distance2((ID, STATE, COORDX, COORDY), Z)
+  (STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
+  (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
+    write("Distance : "), write(EUCL_DIST), nl,
+    check_distance2((ID, STATE, COORDX, COORDY), Z),
+    %infect_person()
   )
 
   ).
@@ -143,9 +164,10 @@ check_distance([X|Z]) :-
   check_distance2(X, PEOPLE),
   check_distance(Z).
 
+%infect_person(ID, )
+
 % To spread the disease among the people
 infect_people :-
-  debug,
   get_people_list(PEOPLE),
   check_distance(PEOPLE).
 
