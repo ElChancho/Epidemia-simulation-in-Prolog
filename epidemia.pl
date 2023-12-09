@@ -10,7 +10,7 @@ matrix_y(150).
 movement_distance(15).
 
 % The distance where the people gets possibly ill
-infection_distance(5).
+infection_distance(15).
 
 % The probability to get infected (min = 0.1 and max = 1)
 infection_probability(0.5).
@@ -22,6 +22,10 @@ delete_people :-
 % To get the list of all the people
 get_people_list(N_PEOPLE) :-
   findall((ID, STATE, COORDX, COORDY), person(ID, STATE, COORDX, COORDY), N_PEOPLE).
+
+% To get the list of the infected people
+get_infected_people(N_PEOPLE) :-
+  findall((ID, infected, COORDX, COORDY), person(ID, infected, COORDX, COORDY), N_PEOPLE).
 
 % To get the number of people (length of the list)
 get_number_people(PEOPLE) :-
@@ -51,7 +55,9 @@ adding_persons(N_PEOPLE, COUNTER) :-
   matrix_x(MAX_X),
   matrix_y(MAX_Y),
   random_coordenates(X, Y, MAX_X, MAX_Y),             % To create random coordenates
-  add_person(COUNTER, healthy, X, Y),   % Add one person healthy    
+  ((COUNTER = 0, add_person(COUNTER, infected, X, Y));  % The first person introduced, is infected
+  (add_person(COUNTER, healthy, X, Y))                 % Add one person healthy
+  ),
   N_COUNTER is COUNTER + 1,
   adding_persons(N_PEOPLE, N_COUNTER).  % Recursive call
   
@@ -117,40 +123,45 @@ move_people :-
 
 % To calculate the distance between two coordenates
 euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, RESULT) :-
-  DELTAX is COORDX2 - COORDX,
-  DELTAY is COORDY2 - COORDY,
-  RESULT is sqrt(DELTAX * DELTAX + DELTAY * DELTAY).
+  %DELTAX is COORDX2 - COORDX,
+  %DELTAY is COORDY2 - COORDY,
+  %RESULT is sqrt(DELTAX * DELTAX + DELTAY * DELTAY).
+  RESULT is sqrt((COORDX2 - COORDX) * (COORDX2 - COORDX) + (COORDY2 - COORDY) * (COORDY2 - COORDY)).
 
 % To know it the person will get ill or not
 % If the infection probability is 0.5, we multiply by 10 and then we do the difference by 10
 % Then generate a random number between that value, and if the value is equal to the result we had, it will get infected(1)
 % Instead, will not get infected(0)
-% Example : 0.5 * 10 = 5  |  10 - 5 = 5 | random_between(0,5, RES) | RES = 5, infected | RES != 5, no infected
+% Example : 0.6 * 10 = 6  |  10 - 6 = 4 | random_between(1,4, RES) | RES = 4, infected | RES != 4, no infected
 random_infection(EUCL_DISTANCE, INFECT) :-
   infection_distance(INFECT_DISTANCE),
   infection_probability(INFECT_PROB),
-  ((EUCL_DISTANCE > INFECT_DISTANCE, INFECT = 0);
-  (EUCL_DISTANCE <= INFECT_DISTANCE, INFECT_PROB = 1, INFECT = 1);
-  (EUCL_DISTANCE <= INFECT_DISTANCE,
-  AUX1 is INFECT_PROB * 10,
-  AUX2 is AUX1 - 10,
+  
+  %ROUND_INFECT_PROB is round(INFECT_PROB * 10) / 10,       %ESTO EN CASO DE QUE EL USUARIO PONGA LA PROBABILIDAD DE INFECCIÓN  
+  ((EUCL_DISTANCE > INFECT_DISTANCE, INFECT is 0);
+  (EUCL_DISTANCE =< INFECT_DISTANCE, INFECT_PROB = 1, INFECT is 1);
+  (EUCL_DISTANCE =< INFECT_DISTANCE,
+  %trace,
+  AUX1 is 10 - (INFECT_PROB * 10),
+  AUX2 is round(AUX1),
   random_between(1, AUX2, RES),
-  ((AUX2 = RES, INFECT = 1);(INFECT = 0))  
+  ((AUX2 = RES, INFECT is 1);(INFECT is 0))  
   )
-  )
+  ).
 
 
 % To check the distance between the people
 check_distance2((_,_,_,_),[]).
 check_distance2((ID, STATE, COORDX, COORDY),[(ID2, STATE2, COORDX2, COORDY2)|Z]) :-
-  ((STATE = cured);
+  (%(STATE = cured);
   (STATE = infected);                                                    % if the first person is infected, just finalise
   (ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
   (STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
   (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
-    write("Distance : "), write(EUCL_DIST), nl,
-    check_distance2((ID, STATE, COORDX, COORDY), Z),
-    %infect_person()
+    %write("Distance : "), write(EUCL_DIST), nl,
+    random_infection(EUCL_DIST, INFECT),
+    ((INFECT = 1, modify_person(ID, infected, COORDX, COORDY)); (INFECT = 0)),     % CAMBIAR AQUI EL TIEMPO DE INFECCION
+    check_distance2((ID, STATE, COORDX, COORDY), Z)
   )
 
   ).
@@ -183,72 +194,17 @@ start :-
   read(N_PEOPLE),
   adding_persons(N_PEOPLE, 0),
   get_number_people(PEOPLE),
-  write("Okey, you just added : "), write(PEOPLE), nl,
-  write_people,
-  move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %write("Okey, you just added : "), write(PEOPLE), nl,
+  %write_people,
+  %move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   write("The people : "), nl,
-  write_people,
+  %write_people,
   infect_people,
+  %write_people,
+  get_infected_people(INF_PEOPLE),
+  %show_people_list(INF_PEOPLE),
+  length(INF_PEOPLE, N_INF_PEOPLE),
+  write(N_INF_PEOPLE), nl,
   delete_people,
   write("SIMULATION FINISHED").
 
-
-  % cuantas personas quieres añadir
-  % pedir numero y llamar funcion para añadir
-  % prueba de mostrar cantidad de gente
-
-
-
-
-
-
-
-
-
-
-% Hecho dinámico para almacenar información sobre personas y su estado de salud
-% :- dynamic persona/2.
-
-% % Reglas para la simulación de infección epidemiológica
-% transmite_enfermedad(X, Y) :-
-%     persona(X, enfermo),
-%     persona(Y, sano),
-%     contacto(X, Y).
-
-% contacto(X, Y) :- conoce(X, Y).
-% contacto(X, Y) :- conoce(Y, X).
-% contacto(X, Y) :- vive_en_misma_ciudad(X, Y).
-
-% conoce(juan, maria).
-% conoce(maria, pedro).
-% conoce(pedro, ana).
-
-% vive_en_misma_ciudad(juan, maria).
-% vive_en_misma_ciudad(maria, pedro).
-% vive_en_misma_ciudad(pedro, ana).
-
-% % Reglas para propagar la enfermedad
-% propagar_enfermedad :- 
-%     transmite_enfermedad(X, Y),
-%     assert(persona(Y, enfermo)),
-%     write(Y), write(' ha sido infectado por '), write(X), nl,
-%     fail.
-% propagar_enfermedad.
-
-% % Ejemplo de inicio con un individuo enfermo
-% iniciar_simulacion :-
-%     assert(persona(juan, enfermo)),
-%     write('Comienza la simulación de la infección epidemiológica.'), nl,
-%     propagar_enfermedad,
-%     write('Fin de la simulación.'), nl,
-%     retractall(persona(_, _)). % Limpiar hechos después de la simulación
-
-% % Predicado para agregar una nueva conexión entre personas
-% agregar_conexion(X, Y) :-
-%     assert(conoce(X, Y)),
-%     assert(conoce(Y, X)).
-
-% % Predicado para eliminar una conexión entre personas
-% eliminar_conexion(X, Y) :-
-%     retract(conoce(X, Y)),
-%     retract(conoce(Y, X)).
