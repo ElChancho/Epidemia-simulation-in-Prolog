@@ -1,31 +1,43 @@
-:- dynamic person/4. % person(ID, STATE, COORDX, COORDY)
+:- dynamic person/5. % person(ID, STATE, COORDX, COORDY, TIME)
 
 % STATE (healty/infected/cured)
+%TIME : The number of the days the person is infected
 
 % The size of the matrix
-matrix_x(150).
-matrix_y(150).
+matrix_x(500).
+matrix_y(500).
 
 % The distante the people move every time 
-movement_distance(15).
+movement_distance(10).
 
 % The distance where the people gets possibly ill
-infection_distance(15).
+infection_distance(5).
 
 % The probability to get infected (min = 0.1 and max = 1)
 infection_probability(0.5).
 
+% The days a person is infected
+infection_time(3).
+
 % Delete people
 delete_people :-
-  retractall(person(_, _, _, _)).
+  retractall(person(_, _, _, _, _)).
 
 % To get the list of all the people
 get_people_list(N_PEOPLE) :-
-  findall((ID, STATE, COORDX, COORDY), person(ID, STATE, COORDX, COORDY), N_PEOPLE).
+  findall((ID, STATE, COORDX, COORDY, TIME), person(ID, STATE, COORDX, COORDY, TIME), N_PEOPLE).
 
 % To get the list of the infected people
 get_infected_people(N_PEOPLE) :-
-  findall((ID, infected, COORDX, COORDY), person(ID, infected, COORDX, COORDY), N_PEOPLE).
+  findall((ID, infected, COORDX, COORDY, TIME), person(ID, infected, COORDX, COORDY, TIME), N_PEOPLE).
+
+% To get the list of the healthy people
+get_healthy_people(N_PEOPLE) :-
+  findall((ID, healthy, COORDX, COORDY, TIME), person(ID, healthy, COORDX, COORDY, TIME), N_PEOPLE).
+
+% To get the list of the cured people
+get_cured_people(N_PEOPLE) :-
+  findall((ID, cured, COORDX, COORDY, TIME), person(ID, cured, COORDX, COORDY, TIME), N_PEOPLE).
 
 % To get the number of people (length of the list)
 get_number_people(PEOPLE) :-
@@ -34,8 +46,8 @@ get_number_people(PEOPLE) :-
 
 % To show the list of the people
 show_people_list([]).
-show_people_list([(ID, STATE, COORDX, COORDY)|Y]) :-
-  write("Person : "), write(ID), write(" State: "), write(STATE), write(" Coord ("), write(COORDX), write(", "), write(COORDY), write(")"), nl,
+show_people_list([(ID, STATE, COORDX, COORDY, TIME)|Y]) :-
+  write("Person : "), write(ID), write(" State: "), write(STATE), write(" Coord ("), write(COORDX), write(", "), write(COORDY), write(")"), write(" Time : "), write(TIME), nl,
   show_people_list(Y).
 
 % To write the people on screen
@@ -54,21 +66,22 @@ adding_persons(N_PEOPLE, COUNTER) :-
   COUNTER < N_PEOPLE,
   matrix_x(MAX_X),
   matrix_y(MAX_Y),
+  infection_time(TIME),
   random_coordenates(X, Y, MAX_X, MAX_Y),             % To create random coordenates
-  ((COUNTER = 0, add_person(COUNTER, infected, X, Y));  % The first person introduced, is infected
-  (add_person(COUNTER, healthy, X, Y))                 % Add one person healthy
+  ((COUNTER = 0, add_person(COUNTER, infected, X, Y, TIME));  % The first person introduced, is infected
+  (add_person(COUNTER, healthy, X, Y, 0))                 % Add one person healthy
   ),
   N_COUNTER is COUNTER + 1,
   adding_persons(N_PEOPLE, N_COUNTER).  % Recursive call
   
 % To add people dynamically
-add_person(ID, STATE, COORDX, COORDY) :-
-  assert(person(ID, STATE, COORDX, COORDY)).
+add_person(ID, STATE, COORDX, COORDY, TIME) :-
+  assert(person(ID, STATE, COORDX, COORDY, TIME)).
 
 % To modify a person created by its id
-modify_person(ID, STATE, COORDX, COORDY) :-
-  retract(person(ID, _, _, _)),
-  assert(person(ID, STATE, COORDX, COORDY)).
+modify_person(ID, STATE, COORDX, COORDY, TIME) :-
+  retract(person(ID, _, _, _, _)),
+  assert(person(ID, STATE, COORDX, COORDY, TIME)).
 
 
 % To get which 'overflow' (less than 0, or more than the matrix size)  0 is correct, 1 is < 0 and 2 is > MAX
@@ -108,12 +121,12 @@ new_coordenates(NEW_X, NEW_Y, X, Y, COORDX, COORDY) :-
 
 % To move a person individually
 move_person([]).
-move_person([(ID, STATE, COORDX, COORDY)|Z]) :-
+move_person([(ID, STATE, COORDX, COORDY, TIME)|Z]) :-
   movement_distance(MAX_X),
   movement_distance(MAX_Y),
   random_coordenates(X, Y, MAX_X, MAX_Y),
   new_coordenates(NEW_X, NEW_Y, X, Y, COORDX, COORDY),
-  modify_person(ID, STATE, NEW_X, NEW_Y),   % Modify the coordenates of its person by the id
+  modify_person(ID, STATE, NEW_X, NEW_Y, TIME),   % Modify the coordenates of its person by the id
   move_person(Z).
 
 % To move randomly all the people in the matrix  (HACER EL MOVIMIENTO TANTO POSITIVO COMO NEGATIVO)
@@ -151,17 +164,17 @@ random_infection(EUCL_DISTANCE, INFECT) :-
 
 
 % To check the distance between the people
-check_distance2((_,_,_,_),[]).
-check_distance2((ID, STATE, COORDX, COORDY),[(ID2, STATE2, COORDX2, COORDY2)|Z]) :-
-  (%(STATE = cured);
+check_distance2((_,_,_,_,_),[]).
+check_distance2((ID, STATE, COORDX, COORDY, _),[(ID2, STATE2, COORDX2, COORDY2, _)|Z]) :-
+  ((STATE = cured);                                                        % if the person is cured, just finalise
   (STATE = infected);                                                    % if the first person is infected, just finalise
   (ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
   (STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
   (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
     %write("Distance : "), write(EUCL_DIST), nl,
     random_infection(EUCL_DIST, INFECT),
-    ((INFECT = 1, modify_person(ID, infected, COORDX, COORDY)); (INFECT = 0)),     % CAMBIAR AQUI EL TIEMPO DE INFECCION
-    check_distance2((ID, STATE, COORDX, COORDY), Z)
+    ((INFECT = 1, infection_time(TIME), modify_person(ID, infected, COORDX, COORDY, TIME)); (INFECT = 0)),     % CAMBIAR AQUI EL TIEMPO DE INFECCION
+    check_distance2((ID, STATE, COORDX, COORDY, _), Z)
   )
 
   ).
@@ -170,7 +183,7 @@ check_distance2((ID, STATE, COORDX, COORDY),[(ID2, STATE2, COORDX2, COORDY2)|Z])
 
 % To check the distance between the people
 check_distance([]).
-check_distance([X|Z]) :-
+check_distance([X|Z]) :-          % A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
   get_people_list(PEOPLE),
   check_distance2(X, PEOPLE),
   check_distance(Z).
@@ -179,32 +192,75 @@ check_distance([X|Z]) :-
 
 % To spread the disease among the people
 infect_people :-
-  get_people_list(PEOPLE),
+  get_people_list(PEOPLE),        %A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
   check_distance(PEOPLE).
 
+% To check the days of every infected people
+check_day([]).
+check_day([ID, STATE, COORDX, COORDY, TIME|Z]) :-
+  ((TIME = 1, modify_person(ID, cured, COORDX, COORDY, 0));
+  (NEW_TIME is TIME - 1, modify_person(ID, STATE, COORDX, COORDY, NEW_TIME))),
+  check_day(Z).
+
+
+% To reduce in one day the person that is infected
+cure_people :-
+  get_infected_people(INF_PEOPLE),
+  check_day(INF_PEOPLE).
 
 % To start all the movement of the people, the spread of the epidemia...
-%epidemia_simulation :-
+finalise_epidemia(N_PEOPLE, N_PEOPLE).
+epidemia_simulation(20).
+epidemia_simulation(DAY, N_PEOPLE) :-   %%% PARA AHORRAR, PASARLE POR PARÁMETRO EL NÚMERO TOTAL DE PERSONAS
+  move_people,
+  infect_people,
+  get_infected_people(INF_PEOPLE),
+  get_healthy_people(HEA_PEOPLE),
+  length(HEA_PEOPLE, N_HEA_PEOPLE),
+  length(INF_PEOPLE, N_INF_PEOPLE),
+  sleep(1),
+  write("---- DAY: "), write(DAY), write( "----"), nl,
+  write("People infected: "), write(N_INF_PEOPLE), nl,
+  write("People healthy: "), write(N_HEA_PEOPLE), nl,
+  %cure_people(INF_PEOPLE),
+  %get_cured_people(CUR_PEOPLE),
+  %length(CUR_PEOPLE, N_CUR_PEOPLE),
+  %write("People cured: "), write(N_CUR_PEOPLE), nl, nl,
+  NEW_DAY is DAY + 1,
 
+  %((finalise_epidemia(N_PEOPLE, N_CUR_PEOPLE));
+  %(epidemia_simulation(NEW_DAY, N_PEOPLE))).
+  epidemia_simulation(NEW_DAY, N_PEOPLE).
 
-
+               % AQUI AL FINAL HACER DOS CONDICIONES, SI EL NUMERO TOTAL DE PERSONAS INSERTADAS ES IGUAL A LAS CURADAS, PARA
+                                            % SI NO CONTINUA RECURSIVAMENTE
 % To start simulation
 start :-
   write("Welcome to an epidemiology simulation. Please insert how many people do you want in your simulation"), nl,
   read(N_PEOPLE),
   adding_persons(N_PEOPLE, 0),
   get_number_people(PEOPLE),
-  %write("Okey, you just added : "), write(PEOPLE), nl,
+  nl,
+  write("Okey, you just added : "), write(PEOPLE), write(" people"), nl, nl,
+  epidemia_simulation(1, N_PEOPLE),
+
+
+  % PEDIR DISTANCIA DE INFECCIÓN, MOVIMIENTO DE LAS PERSONAS, POSIBILIDAD DE INFECCIÓN, TIEMPO DE INFECCIÓN, TAMAÑO DEL BLOQUE
+  % PONER CIERTOS LIMITES, INDICARLO, SI SE PASA PONER EL PREDETERMINADO
+  % TAMBIEN PONERLE EL "RECOMENDADO" O EL PREDETERMINADO DEL PROGRAMA
+
+
+
   %write_people,
   %move_people, %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  write("The people : "), nl,
+  %write("The people : "), nl,
   %write_people,
-  infect_people,
+  %infect_people,
   %write_people,
-  get_infected_people(INF_PEOPLE),
+  %get_infected_people(INF_PEOPLE),
   %show_people_list(INF_PEOPLE),
-  length(INF_PEOPLE, N_INF_PEOPLE),
-  write(N_INF_PEOPLE), nl,
+  %length(INF_PEOPLE, N_INF_PEOPLE),
+  %write(N_INF_PEOPLE), nl,
   delete_people,
   write("SIMULATION FINISHED").
 
