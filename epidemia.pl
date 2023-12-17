@@ -4,17 +4,17 @@
 %TIME : The number of the days the person is infected
 
 % The size of the matrix
-matrix_x(500).
-matrix_y(500).
+matrix_x(150).
+matrix_y(150).
 
 % The distante the people move every time 
-movement_distance(10).
+movement_distance(15).
 
 % The distance where the people gets possibly ill
-infection_distance(5).
+infection_distance(20).
 
 % The probability to get infected (min = 0.1 and max = 1)
-infection_probability(0.5).
+infection_probability(1).
 
 % The days a person is infected
 infection_time(3).
@@ -165,39 +165,48 @@ random_infection(EUCL_DISTANCE, INFECT) :-
 
 % To check the distance between the people
 check_distance2((_,_,_,_,_),[]).
-check_distance2((ID, STATE, COORDX, COORDY, _),[(ID2, STATE2, COORDX2, COORDY2, _)|Z]) :-
-  ((STATE = cured);                                                        % if the person is cured, just finalise
-  (STATE = infected);                                                    % if the first person is infected, just finalise
-  (ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
-  (STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
-  (euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
+check_distance2((ID, STATE, COORDX, COORDY, _),[(_, _, COORDX2, COORDY2, _)|Z]) :-
+  euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
+  random_infection(EUCL_DIST, INFECT),
+  ((INFECT = 1, infection_time(TIME), modify_person(ID, infected, COORDX, COORDY, TIME));
+  (INFECT = 0)),
+  check_distance2((ID,STATE, COORDX, COORDY, _), Z).
+  
+  
+  
+  %(                                                   % if the first person is infected, just finalise
+  %(ID = ID2, check_distance2((ID, STATE, COORDX, COORDY), Z));            % if it is the same id, go to the next one
+  %(STATE2 \= infected, check_distance2((ID, STATE, COORDX, COORDY), Z));  % if the person is not infected, go to the next one
+  %(euclidean_distance(COORDX, COORDY, COORDX2, COORDY2, EUCL_DIST),
     %write("Distance : "), write(EUCL_DIST), nl,
-    random_infection(EUCL_DIST, INFECT),
-    ((INFECT = 1, infection_time(TIME), modify_person(ID, infected, COORDX, COORDY, TIME)); (INFECT = 0)),     % CAMBIAR AQUI EL TIEMPO DE INFECCION
-    check_distance2((ID, STATE, COORDX, COORDY, _), Z)
-  )
+  %  random_infection(EUCL_DIST, INFECT),
+  %  ((INFECT = 1, infection_time(TIME), modify_person(ID, infected, COORDX, COORDY, TIME)); (INFECT = 0)),     % CAMBIAR AQUI EL TIEMPO DE INFECCION
+  %  check_distance2((ID, STATE, COORDX, COORDY, _), Z)
+  %)
 
-  ).
-  %check_distance2()
+  %).
+  
 
 
 % To check the distance between the people
-check_distance([]).
-check_distance([X|Z]) :-          % A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
-  get_people_list(PEOPLE),
-  check_distance2(X, PEOPLE),
-  check_distance(Z).
-
-%infect_person(ID, )
+check_distance([], _).
+check_distance([X|Z], I_PEOPLE) :-          % A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
+  %get_people_list(PEOPLE),
+  check_distance2(X, I_PEOPLE),
+  check_distance(Z, I_PEOPLE).
 
 % To spread the disease among the people
 infect_people :-
-  get_people_list(PEOPLE),        %A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
-  check_distance(PEOPLE).
+  %trace,
+  get_healthy_people(H_PEOPLE),
+  get_infected_people(I_PEOPLE),
+  check_distance(H_PEOPLE, I_PEOPLE).
+  %get_people_list(PEOPLE),        %A LO MEJOR PASARLE POR UN LADO LA GENTE HEALTHY Y POR OTRO LA INFECTADA
+  %check_distance(PEOPLE).
 
 % To check the days of every infected people
 check_day([]).
-check_day([ID, STATE, COORDX, COORDY, TIME|Z]) :-
+check_day([(ID, STATE, COORDX, COORDY, TIME)|Z]) :-
   ((TIME = 1, modify_person(ID, cured, COORDX, COORDY, 0));
   (NEW_TIME is TIME - 1, modify_person(ID, STATE, COORDX, COORDY, NEW_TIME))),
   check_day(Z).
@@ -210,30 +219,32 @@ cure_people :-
 
 % To start all the movement of the people, the spread of the epidemia...
 finalise_epidemia(N_PEOPLE, N_PEOPLE).
-epidemia_simulation(20).
+%epidemia_simulation(15, N_PEOPLE).
 epidemia_simulation(DAY, N_PEOPLE) :-   %%% PARA AHORRAR, PASARLE POR PARÁMETRO EL NÚMERO TOTAL DE PERSONAS
+  %trace, 
   move_people,
+  cure_people,
+  %write_people,
+  %trace,
   infect_people,
+  %write_people,
   get_infected_people(INF_PEOPLE),
   get_healthy_people(HEA_PEOPLE),
+  get_cured_people(CUR_PEOPLE),
   length(HEA_PEOPLE, N_HEA_PEOPLE),
   length(INF_PEOPLE, N_INF_PEOPLE),
+  length(CUR_PEOPLE, N_CUR_PEOPLE),
   sleep(1),
   write("---- DAY: "), write(DAY), write( "----"), nl,
   write("People infected: "), write(N_INF_PEOPLE), nl,
   write("People healthy: "), write(N_HEA_PEOPLE), nl,
-  %cure_people(INF_PEOPLE),
-  %get_cured_people(CUR_PEOPLE),
-  %length(CUR_PEOPLE, N_CUR_PEOPLE),
-  %write("People cured: "), write(N_CUR_PEOPLE), nl, nl,
+  write("People cured: "), write(N_CUR_PEOPLE), nl, nl,
   NEW_DAY is DAY + 1,
+ 
+  ((finalise_epidemia(N_PEOPLE, N_CUR_PEOPLE));         % If all the people is cured
+  (N_INF_PEOPLE = 0);                                   % If there are no infected people
+  (epidemia_simulation(NEW_DAY, N_PEOPLE))).            % else continues
 
-  %((finalise_epidemia(N_PEOPLE, N_CUR_PEOPLE));
-  %(epidemia_simulation(NEW_DAY, N_PEOPLE))).
-  epidemia_simulation(NEW_DAY, N_PEOPLE).
-
-               % AQUI AL FINAL HACER DOS CONDICIONES, SI EL NUMERO TOTAL DE PERSONAS INSERTADAS ES IGUAL A LAS CURADAS, PARA
-                                            % SI NO CONTINUA RECURSIVAMENTE
 % To start simulation
 start :-
   write("Welcome to an epidemiology simulation. Please insert how many people do you want in your simulation"), nl,

@@ -1,3 +1,32 @@
+ALGO RARO EN ESTO :
+
+---- DAY: 6----
+People infected: 24
+People healthy: 68
+People cured: 8
+
+---- DAY: 7----
+People infected: 24
+People healthy: 61
+People cured: 15
+
+
+---- DAY: 17----
+People infected: 2
+People healthy: 31
+People cured: 67
+
+---- DAY: 18----
+People infected: 2
+People healthy: 30
+People cured: 68
+
+
+
+
+
+
+
 line 56, adding persons
 a lo mejor puedo poner al principio lo de matrix y lo de infeccion
 y usar ! corte creo para que no mire de vuelta eso?
