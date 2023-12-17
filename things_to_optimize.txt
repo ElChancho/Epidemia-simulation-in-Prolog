@@ -21,8 +21,26 @@ People infected: 2
 People healthy: 30
 People cured: 68
 
+---- DAY: 30----
+People infected: 43
+People healthy: 124
+People cured: 133
+
+---- DAY: 31----
+People infected: 43
+People healthy: 112
+People cured: 145
 
 
+---- DAY: 2----
+People infected: 6
+People healthy: 44
+People cured: 0
+
+---- DAY: 3----
+People infected: 6
+People healthy: 43
+People cured: 1
 
 
 

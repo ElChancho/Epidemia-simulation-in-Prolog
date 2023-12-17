@@ -8,16 +8,16 @@ matrix_x(150).
 matrix_y(150).
 
 % The distante the people move every time 
-movement_distance(15).
+movement_distance(10).
 
 % The distance where the people gets possibly ill
-infection_distance(20).
+infection_distance(15).
 
 % The probability to get infected (min = 0.1 and max = 1)
-infection_probability(1).
+infection_probability(0.5).
 
 % The days a person is infected
-infection_time(3).
+infection_time(5).
 
 % Delete people
 delete_people :-
