@@ -8,7 +8,7 @@
 :- dynamic matrix_x/1.
 :- dynamic matrix_y/1.
 
-% The distante the people move every time 
+% The distance the people move every day
 :- dynamic movement_distance/1.
 
 % The distance where the people gets possibly ill
@@ -212,7 +212,7 @@ cure_people :-
 
 % To start all the movement of the people, the spread of the epidemia...
 finalise_epidemia(N_PEOPLE, N_PEOPLE).
-epidemia_simulation(DAY, N_PEOPLE) :-   %%% PARA AHORRAR, PASARLE POR PARÁMETRO EL NÚMERO TOTAL DE PERSONAS
+epidemia_simulation(DAY, N_PEOPLE) :- 
   move_people,
   infect_people,
   cure_people,
