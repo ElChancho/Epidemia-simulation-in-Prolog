@@ -1,38 +1,37 @@
 # EPIDEMIA SIMULATION #
 
-This program made in prolog, simulates a simple epidemia infection.
+This Prolog program simulates a simple epidemic infection.
 
-## Load program ##
+## Load Program ##
 
-To load the file, make sure that you are in the directory where the file is and execute prolog with the name of the file :
+To load the file, ensure that you are in the directory where the file is located and execute Prolog with the name of the file:
 
-```
+```prolog
 prolog epidemia.pl
 ```
 
-If you are already in the prolog terminal :
+If you are already in the Prolog terminal:
 
+```prolog
+consult('epidemia.pl').
 ```
-consult('epidemia.pl')
-```
 
-## Start the program ##
+## Start the Program ##
 
-To start the program, just use :
+To start the program, simply use:
 
-```
+```prolog
 start.
 ```
-**IMPORTANT!** Don't forget to write a final dot in your inserted data, this is because prolog works like this.
 
-100 :x: 
-<br></br>
+**IMPORTANT!** Don't forget to include a final dot after your inserted data. This is how Prolog works.
 
-100. :heavy_check_mark:
+- 100 :x:
 
-<br></br>
-Now the program will ask you for some inputs (You can follow the recommendations if you want). 
+- 100. :heavy_check_mark:
 
-After you inserted the data, the program will show the insertions that you just chosen and will show you how many people are healthy, infected and cured everyday.
+Now, the program will prompt you for inputs (you can follow the recommendations if you prefer). 
 
-Hope you like this little project!
+After inserting the data, the program will display the chosen inputs, and it will provide information on the number of healthy, infected, and cured individuals every day.
+
+Hope you enjoy this little project!
