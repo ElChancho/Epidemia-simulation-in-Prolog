@@ -28,7 +28,10 @@ start.
 
 - 100 :x:
 <br></br>
+
 - 100. :heavy_check_mark:
+
+<br></br>
 
 Now, the program will prompt you for inputs (you can follow the recommendations if you prefer). 
 
