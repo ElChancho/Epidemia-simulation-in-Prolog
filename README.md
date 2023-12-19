@@ -26,12 +26,9 @@ start.
 
 **IMPORTANT!** Don't forget to include a final dot after your inserted data. This is how Prolog works.
 
-- 100 :x:
-<br></br>
-
 - 100. :heavy_check_mark:
 
-<br></br>
+- 100 :x:
 
 Now, the program will prompt you for inputs (you can follow the recommendations if you prefer). 
 
