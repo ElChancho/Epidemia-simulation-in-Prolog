@@ -276,7 +276,7 @@ user_inputs :-
   read(SPA_Y),nl,
 
   write("The maximum distance the people move in every day. (The max is 30)"), nl,
-  write("Recommended: 10"), nl,
+  write("Recommended: 15"), nl,
   read(M_D), nl,
 
   write("The distance where people could get ill. (The max is 30)"), nl,
@@ -291,7 +291,7 @@ user_inputs :-
   read(I_P), nl,
 
   write("The number of days a person is ill. (The max is 10)"), nl,
-  write("Recommended: 3"), nl,
+  write("Recommended: 5"), nl,
   read(I_T), nl,
   check_input_data(N_PEOPLE, SPA_X, SPA_Y, M_D, I_D, I_P, I_T, NEW_PEOPLE, NEW_SPA_X, NEW_SPA_Y, NEW_M_D, NEW_I_D, NEW_I_P, NEW_I_T),
 
